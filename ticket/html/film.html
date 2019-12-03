@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <link rel="stylesheet" type="text/css" href="../res/static/css/main.css">
+  <link rel="stylesheet" type="text/css" href="../res/layui/css/layui.css">
+  <script type="text/javascript" src="../res/layui/layui.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <script src="../res/js/jquery-3.3.1.js"></script>
+  <script src="../res/js/url.js"></script>
+</head>
+
+<script>
+	
+	$(document).ready(function(){
+		var denghao=decodeURI(location.search).indexOf("=");
+  		var searchwhat=decodeURI(location.search).substring(1,denghao);
+		if(searchwhat==""){
+			var filmtypeid=decodeURI(location.search).substring(denghao+1,decodeURI(location.search).length);
+//			显示所有的电影			
+			if(filmtypeid==""){
+				$.ajax({
+					"url":SWDURL+"/film/listAllFilm",
+					success:function(data){
+						layui.use(['laypage', 'layer'], function(){
+							var laypage = layui.laypage
+						  	,layer = layui.layer;
+						  	//调用分页
+						  	laypage.render({
+						    elem: 'demo20'
+						    ,count: data.length
+						    ,limit:9 //一页显示多少
+						    ,jump: function(obj){
+						      //模拟渲染
+						      	document.getElementById('list-cont').innerHTML = function(){
+						        var arr = []
+						        ,thisData = data.concat().splice(obj.curr*obj.limit - obj.limit, obj.limit);
+						        layui.each(thisData, function(index, item){
+						          arr.push("<div class=\"item\">\n"+
+			            			"\t<span style=\"font-weight: bold;text-align: center;\">"+item.filmname+"</span>\n"+
+						           	 "\t<br/>\n"+
+						            "<div class=\"img\">\n"+
+								           "<a href=\"filmdetails.html?filmid="+item.filmid+"\"><img src=\""+item.fimage+"\" style=\"width: 280px;height: 295px;\"></a>\n"+
+								           "</div>\n"+
+						            "<div class=\"text\">\n"+
+							        "<p class=\"title\"></p>\n"+
+							        "<p class=\"price\">\n"+
+							        "<span class=\"pri\">评分："+item.score+"</span>\n"+
+							        "<span class=\"nub\">时长："+item.showtime+"分钟</span>\n"+
+							        "</p>\n"+
+							        "</div>\n"+
+						        "</div>");
+						        });
+						        return arr.join('');
+						      }();
+						    }
+						  });
+						});	
+					}
+				})
+			}
+		}else if(searchwhat=="filmtypeid"){
+//			显示某一种类型的所有电影
+			var filmtypeid=decodeURI(location.search).substring(denghao+1,decodeURI(location.search).length);
+			$.ajax({
+				"url":SWDURL+"/film/queryAllFilmByFilmtypeId",
+				"data":{"filmtypeid":filmtypeid},
+				success:function(data){
+				if(data!=""){
+					layui.use(['laypage', 'layer'], function(){
+							var laypage = layui.laypage
+						  	,layer = layui.layer;
+						  	//调用分页
+						  	laypage.render({
+						    elem: 'demo20'
+						    ,count: data.length
+						    ,limit:9 //一页显示多少
+						    ,jump: function(obj){
+						      //模拟渲染
+						      	document.getElementById('list-cont').innerHTML = function(){
+						        var arr = []
+						        ,thisData = data.concat().splice(obj.curr*obj.limit - obj.limit, obj.limit);
+						        layui.each(thisData, function(index, item){
+						          arr.push("<div class=\"item\">\n"+
+			            			"\t<span style=\"font-weight: bold;text-align: center;\">"+item.filmname+"</span>\n"+
+						           	 "\t<br/>\n"+
+						            "<div class=\"img\">\n"+
+								           "<a href=\"filmdetails.html?filmid="+item.filmid+"\"><img src=\""+item.fimage+"\" style=\"width: 280px;height: 295px;\"></a>\n"+
+								           "</div>\n"+
+						            "<div class=\"text\">\n"+
+							        "<p class=\"title\"></p>\n"+
+							        "<p class=\"price\">\n"+
+							        "<span class=\"pri\">评分："+item.score+"</span>\n"+
+							        "<span class=\"nub\">时长："+item.showtime+"分钟</span>\n"+
+							        "</p>\n"+
+							        "</div>\n"+
+						        "</div>");
+						        });
+						        return arr.join('');
+						      }();
+						    }
+						  });
+						});	
+					}else{
+						$("#list-cont").html("<span style='font-size: 20px;position: relative;top: 20px;left: 20px;'>该类型电影暂无！</span>")
+					}
+				},
+				error:function(){
+					$(".commod-cont-wrap").html("<img src='film/img/404error.jpg' style='width: 100%;height: 100%;'></img>");
+				}
+			});
+		}else if(searchwhat=="filmname"){
+			var filmname=decodeURI(location.search).substring(denghao+1,decodeURI(location.search).length);
+			if(filmname!=""){
+				$.ajax({
+					"url":SWDURL+"/film/searchFilmByName",
+					"data":{"filmname":filmname},
+					success:function(data){
+					if(data!=""){
+						layui.use(['laypage', 'layer'], function(){
+								var laypage = layui.laypage
+							  	,layer = layui.layer;
+							  	//调用分页
+							  	laypage.render({
+							    elem: 'demo20'
+							    ,count: data.length
+							    ,limit:9 //一页显示多少
+							    ,jump: function(obj){
+							      //模拟渲染
+							      	document.getElementById('list-cont').innerHTML = function(){
+							        var arr = []
+							        ,thisData = data.concat().splice(obj.curr*obj.limit - obj.limit, obj.limit);
+							        layui.each(thisData, function(index, item){
+							          arr.push("<div class=\"item\">\n"+
+				            			"\t<span style=\"font-weight: bold;text-align: center;\">"+item.filmname+"</span>\n"+
+							           	 "\t<br/>\n"+
+							            "<div class=\"img\">\n"+
+									           "<a href=\"filmdetails.html?filmid="+item.filmid+"\"><img src=\""+item.fimage+"\" style=\"width: 280px;height: 295px;\"></a>\n"+
+									           "</div>\n"+
+							            "<div class=\"text\">\n"+
+								        "<p class=\"title\"></p>\n"+
+								        "<p class=\"price\">\n"+
+								        "<span class=\"pri\">评分："+item.score+"</span>\n"+
+								        "<span class=\"nub\">时长："+item.showtime+"分钟</span>\n"+
+								        "</p>\n"+
+								        "</div>\n"+
+							        "</div>");
+							        });
+							        return arr.join('');
+							      }();
+							    }
+							  });
+							});	
+						}else{
+							$("#list-cont").html("<span style='font-size: 20px;position: relative;top: 20px;left: 20px;'>对不起，你所查找的影片暂无！</span>")
+						}
+					},
+					error:function(){
+						$(".commod-cont-wrap").html("<img src='film/img/404error.jpg' style='width: 100%;height: 100%;'></img>");
+					}
+				});
+			}else{
+				window.history.back(-1);
+			}
+		}else{
+			$(".commod-cont-wrap").html("<img src='film/img/404error.jpg' style='width: 100%;height: 100%;'></img>");
+		}
+		
+		
+//		显示所有的电影类型名称
+		$.post(
+			SWDURL+"/filmtype/listAllFilmType",
+			function(data){
+				var str="";
+				for (var i=0;i<data.length;i++){
+				 	str=str+"<dl><dt><a class=\"queryFilmByFilmtypeId\" href=\"film.html?filmtypeid="+data[i].filmtypeid+"\">"+data[i].filmtypename+"</a></dt></dl>\n" ;
+				}
+				$("#filmtypediv").append(str)
+			});
+
+	});
+	
+</script>
+
+<body>
+
+  <div class="site-nav-bg">
+    <div class="site-nav w1200">
+      <p class="sn-back-home">
+        <i class="layui-icon layui-icon-home"></i>
+        <a href="#">首页</a>
+      </p>
+      <div class="sn-quick-menu">
+        <div class="login"><a href="login.html">登录</a></div>
+        <div class="sp-cart"><a href="shopcart.html">购物车</a><span>2</span></div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div class="header">
+    <div class="headerLayout w1200">
+      <div class="headerCon">
+        <h1 class="mallLogo">
+          <a href="#" title="母婴商城">
+            <img src="../res/static/img/logo.png">
+          </a>
+        </h1>
+        <div class="mallSearch">
+          <form action="" class="layui-form" novalidate>
+            <input type="text" name="filmname" required  lay-verify="required" autocomplete="off" class="layui-input" placeholder="请输入需要的商品">
+            <button class="layui-btn" lay-submit lay-filter="formDemo">
+                <i class="layui-icon layui-icon-search"></i>
+            </button>
+            <input type="hidden" name="" value="">
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="content content-nav-base commodity-content">
+    <div class="main-nav">
+      <div class="inner-cont0">
+        <div class="inner-cont1 w1200">
+          <div class="inner-cont2">
+          	<a href="index.html" class="active">主页面</a>
+            <a href="film.html" class="active">所有商品</a>
+            <a href="buytoday.html">今日团购</a>
+            <a href="information.html">母婴资讯</a>
+            <a href="about.html">关于我们</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="commod-cont-wrap">
+      <div class="commod-cont w1200 layui-clear">
+        <div class="left-nav">
+          <div class="title"><a href="film.html" style="color: white;">所有分类</a></div>
+          <div class="list-box" id="filmtypediv">
+            <!--<dl>
+             <dt>奶粉辅食</dt>
+	             <dd><a href="javascript:;">进口奶粉</a></dd>
+	             <dd><a href="javascript:;">宝宝辅食</a></dd>
+	             <dd><a href="javascript:;">营养品</a></dd>
+            </dl>-->
+          </div>
+        </div>
+        <div class="right-cont-wrap">
+          <div class="right-cont">
+            <div class="sort layui-clear">
+              <a class="active" href="javascript:;" event = 'volume'>销量</a>
+              <a href="javascript:;" event = 'price'>价格</a>
+              <a href="javascript:;" event = 'newprod'>新品</a>
+              <a href="javascript:;" event = 'collection'>收藏</a>
+            </div>
+            <div class="cont-list layui-clear" id="list-cont">
+              <!--<div class="item">
+                <div class="img">
+                  <a href="javascript:;"><img src="../res/static/img/paging_img1.jpg"></a>
+                </div>
+                <div class="text">
+                  <p class="title">森系小清新四件套</p>
+                  <p class="price">
+                    <span class="pri">￥200</span>
+                    <span class="nub">1266付款</span>
+                  </p>
+                </div>
+              </div>
+            </div> -->
+            
+          </div>
+          	<!--显示分页的-->
+ 			<div id="demo20"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+</body>
+</html>

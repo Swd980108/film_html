@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <link rel="stylesheet" type="text/css" href="../res/static/css/main.css">
+  <link rel="stylesheet" type="text/css" href="../res/layui/css/layui.css">
+  <script type="text/javascript" src="../res/layui/layui.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <script type="text/javascript" src="../res/js/jquery-3.3.1.js" ></script>
+  <script src="../res/js/url.js"></script>
+  <script>
+  	var filmid=""
+  	$(document).ready(function(){
+  			var denghao=decodeURI(location.search).indexOf("=");
+  			var searchwhat=decodeURI(location.search).substring(1,denghao);
+  			if(searchwhat=="filmid"){
+		  				filmid=decodeURI(location.search).substring(denghao+1,decodeURI(location.search).length);
+			  			if(filmid!=""){
+				  				$.ajax({
+				  				"url":SWDURL+"/film/queryFilmById",
+				  				"data":{"filmid":filmid},
+				  				"type":"post",
+				  				success:function(data){
+				  					if(data!=""){
+				  						$("#filmname").text(data.filmname);
+					  					$("#filmtime").text(data.showtime);
+					  					$("#filmactors").text(data.actors);
+					  					$("#filmscore").text(data.score);
+					  					$("#filmtype").text(data.filmtype.filmtypename);
+					  					$("#filmimage").attr("src",data.fimage)
+					  					$("#filmdecc").html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+data.fdesc);
+				  					}else{
+				  						$("#showfilm").html("<img src='film/img/404error.jpg' style='width: 100%;height: 100%;'></img>");
+				  					}
+				  				},
+				  				error:function(){
+				  					$("#showfilm").html("<img src='film/img/404error.jpg' style='width: 100%;height: 100%;'></img>");
+				  				}
+				  			});
+			  			}else{
+			  				window.history.back(-1);
+			  			}
+			  			
+						$.ajax({
+							"url":SWDURL+"/filmpaipian/queryAllPaiPianFilmById",
+							"data":{"filmid":filmid},
+							"type":"post",
+							success:function(data){
+								if(data!=""){
+									var str="";
+									for(var i=0;i<data.length;i++){
+									//时间格式转换
+									var dateee = new Date(data[i].starttime).toJSON();
+			  					starttime =  new Date(+new Date(dateee)).toISOString().replace(/T/g, ' ').replace(/\.[\d]{3}Z/, '')
+									console.log(data[i].starttime)
+									console.log(new Date().toLocaleString());
+									console.log(parseInt(data[i].starttime-new Date().toDateString()))
+									str=str+"<tr>\n"+
+							        "\t\t\t<td id=\"pcinemaname\">"+data[i].cinemaname+"</td>\n"+
+							        "\t\t\t<td id=\"pcinemaaddr\">"+data[i].caddr+"</td>\n"+
+							        "\t\t\t<td id=\"pfilmtypename\">"+data[i].filmtypename+"</td>\n"+
+							        "\t\t\t<td id=\"pstarttime\">"+starttime+"</td>\n"+
+							        "\t\t\t<td id=\"pprice\">"+data[i].filmprice+"元</td>\n"+
+							        "\t\t\t<td><button type=\"submit\" class=\"layui-btn layui-btn-danger\" onclick=\"window.location.href = 'buyticket.html?paipianid="+data[i].paipianid+"'\">立即购票</td>\n"+
+							        "\t\t</tr>"
+									}
+									$("#filmpiaotable").append(str)
+								}else{
+									$("#filmpiaotable").html("<span style='font-size: 20px;position: relative;left: 20px;'>该电影暂未上映!!</span>");
+								}
+							}
+						});
+  			}else{
+  				$("#showfilm").html("<img src='film/img/404error.jpg' style='width: 100%;height: 100%;'></img>");
+  			}
+  			
+  			
+  			
+  			layui.use(['laypage', 'layer'], function(){
+				var laypage = layui.laypage
+				,layer = layui.layer;
+				$.ajax({
+					"type":"post",
+					"data":{
+						"filmid":filmid
+					},
+					"url":SWDURL+"/comments/queryCommentsByfilmid",
+					success:function(data){
+						if(data!=""){
+							laypage.render({
+						    elem: 'demofenye'
+						    ,count: data.length
+						    ,limit:5
+						    ,jump: function(obj){
+						      //模拟渲染
+						      document.getElementById('commentdiv').innerHTML = function(){
+						        var arr = []
+						        ,thisData = data.concat().splice(obj.curr*obj.limit - obj.limit, obj.limit);
+						        layui.each(thisData, function(index, item){
+						        	//时间格式转换
+						        var dateee = new Date(item.commenttime).toJSON();
+			  						commenttime =  new Date(+new Date(dateee)).toISOString().replace(/T/g, ' ').replace(/\.[\d]{3}Z/, '')
+						          	arr.push("<div class=\"comment\">\n"+
+									        "\t\t\t\t<div class=\"imgdiv\"><img class=\"imgcss\"  src=\"user/img/stark.png\"/></div>\n"+
+									        "\t\t\t\t<div class=\"conmment_details\">\n"+
+									        "\t\t\t\t\t<span class=\"comment_name\">"+item.nickname+"</span>     <span>"+commenttime+"</span>\n"+
+									        "\t\t\t\t\t<div class=\"comment_content\" >"+item.commenttext+"</div>\n"+
+									        "\t\t\t\t</div>\n"+
+									        "\t\t\t\t<hr>\n"+
+									        "\t\t\t</div>");
+						        });
+						        return arr.join('');
+						      }();
+						    }
+						  });
+						}else{
+							$("#commentdiv").html("<span style='font-size: 20px;position: relative;left: 20px;'>该电影暂无评论！！</span>")
+						}
+					},
+					error:function(){
+						$("#tolcom").hide();
+					}
+				});
+			  
+			});
+		
+		
+		//观看电影之后才能评论
+			$("#commentbutton").click(function(){
+				$.ajax({
+					"type":"get",
+					"url":SWDURL+"/comments/queryUserSeeFilmCount",
+					"data":{
+						"userid":1,
+						"filmid":filmid
+					},
+					success:function(data){
+						if(data){
+							layer.open({
+			                type: 1,
+			                title: '评论',
+			                //skin: 'layui-layer-rim', //加上边框
+			                area: ['400px', '300px'], //宽高
+			                content: $("#addComment"),
+		            	});
+						}else{
+							layer.alert('观看电影后才能评论！！', {
+								icon: 5,
+								title: "提示"
+							});
+						}
+					}
+				});
+				
+				
+			});
+			
+			$("#commentformbutton").click(function(){
+				var commenttext = $("#commenttext").val();
+				if(commenttext!=""){
+					$.ajax({
+						"type":"get",
+						"data":{
+							"commenttext":commenttext,
+							"userid":1,
+							"filmid":filmid
+						},
+						"url":SWDURL+"/comments/addComment",
+//						"async":false,
+						success:function(){
+							layer.close($("#addComment").val()); //关闭当前窗口
+							layer.msg("添加成功");
+              window.location.reload();
+						}
+					});
+				}else{
+					layer.alert('请先输入评论！！', {
+						icon: 5,
+						title: "提示"
+					});
+				}
+			});
+  			
+  	});
+  	
+  	
+  	
+  </script>
+</head>
+<body>
+
+  <div class="site-nav-bg">
+    <div class="site-nav w1200">
+      <p class="sn-back-home">
+        <i class="layui-icon layui-icon-home"></i>
+        <a href="#">首页</a>
+      </p>
+      <div class="sn-quick-menu">
+       <div class="login"><a href="login.html">登录</a></div>
+        <div class="sp-cart"><a href="shopcart.html">购物车</a><span>2</span></div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div class="header">
+    <div class="headerLayout w1200">
+      <div class="headerCon">
+        <h1 class="mallLogo">
+          <a href="#" title="母婴商城">
+            <img src="../res/static/img/logo.png">
+          </a>
+        </h1>
+        <!--<div class="mallSearch">
+          <form action="" class="layui-form" novalidate>
+            <input type="text" name="filmid" required  lay-verify="required" autocomplete="off" class="layui-input" placeholder="请输入需要的商品" value="">
+            <button class="layui-btn" lay-submit lay-filter="formDemo">
+                <i class="layui-icon layui-icon-search"></i>
+            </button>
+            <input type="hidden" name="" value="">
+          </form>
+        </div>-->
+      </div>
+    </div>
+  </div>
+
+
+  <div class="content content-nav-base datails-content">
+    <div class="main-nav">
+      <div class="inner-cont0">
+        <div class="inner-cont1 w1200">
+          <div class="inner-cont2">
+            <a href="film.html" class="active">所有商品</a>
+            <a href="buytoday.html">今日团购</a>
+            <a href="information.html">母婴资讯</a>
+            <a href="about.html">关于我们</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="data-cont-wrap w1200"  id="showfilm">
+    	
+    	<!--实现分享的-->
+    	<div class="bdsharebuttonbox bdshare-button-style0-16" data-bd-bind="1524625953372" style="position: absolute;right: 200px;">
+				<a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+				<a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+				<a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a>
+				<a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a>
+				<a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+				<a href="#" class="bds_more" data-cmd="more"></a>
+			</div>
+      <div class="crumb">
+        <a href="javascript:;">首页</a>
+        <span>></span>
+        <a href="film.html">所有影片</a>
+        <span>></span>
+        <a href="javascript:;">影片详情</a>
+      </div>
+      <div class="product-intro layui-clear" >
+        <div class="preview-wrap">
+          <a><img id="filmimage" style="width: 250px;height: 350px; position: relative;left: 100px;"></a>
+        </div>
+        <div class="itemInfo-wrap">
+          <div class="itemInfo">
+            <div class="title">
+              <h1 id="filmname"> </h1>
+              <span><i class="layui-icon layui-icon-rate-solid"></i>收藏</span>
+            </div>
+            <div class="summary" style=" position: relative;right: 30px;">
+              <p class="reference"><span>时&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;长：</span><strong id="filmtime"></strong><strong>分钟</strong></p>
+              <p class="activity"><span>演&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;员：</span><strong id="filmactors"></strong></p>
+              <p class="address-box"><span>评&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;分：</span><strong style="color: red;" id="filmscore"></strong></p>
+              <p class="address-box"><span>电影类型：</span><strong id="filmtype"></strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="border: 1px solid whitesmoke; width: 80%;margin: auto; padding: 10px;position: relative;bottom: 30px;" >
+      	<h2>电影相关信息：</h1>
+        <span id="filmdecc" style="font-family: '微软雅黑';font-size:15px; line-height: 30px;"</span>
+      </div><br />
+      
+      <div style="border: 1px solid whitesmoke; width: 80%;margin: auto; padding: 10px;position: relative;bottom: 30px;" >
+      	<h2>影院列表：</h1>
+       	<table id="filmpiaotable">
+       		<tr>
+       			<th>影院名</th>
+       			<th>影院地址</th>
+       			<th>电影类型</th>
+       			<th>放映时间</th>
+       			<th>价格</th>
+       			<th>选座购票</th>
+       		</tr>
+       		<!--显示该影片所放映信息模板-->
+       		<!--<tr>
+       			<td id="pcinemaname"></td>
+       			<td id="pcinemaaddr"></td>
+       			<td id="pfilmtypename"></td>
+       			<td id="pstarttime"></td>
+       			<td id="pprice"></td>
+       			<td></td>
+       		</tr>-->
+       	</table>
+      </div>
+    </div>
+    
+    <div id="tolcom">
+    	<!--评论-->
+	    <div id="writecommentdiv">
+				<button type="button" class="layui-btn" id="commentbutton">评论</button>
+			</div>
+			<div id="commentdiv">
+				<!--<div class="comment">
+					<div class="imgdiv"><img class="imgcss"  src="img/stark.png"/></div>
+					<div class="conmment_details">
+						<span class="comment_name">大白 </span>     <span>22分钟前</span>
+						<div class="comment_content" >  感觉林丹越来越帅了，好棒</div>
+					</div>
+					<hr>
+				</div>-->
+				<!--<div id="demofenye"></div>-->
+			</div>
+			<div id="demofenye"></div>
+    </div>
+  </div>
+  
+  <!--添加评论的模态框-->
+	<div id="addComment" style="display: none">
+		<form class="layui-form">
+		    <div class="layui-input-inline">
+		    	<textarea placeholder="请输入内容" class="layui-textarea" id="commenttext" style="width: 360px;height: 160px;margin: 20px;"></textarea>
+		    </div>
+		    <div class="layui-form-item">
+		    <!--这里的提交按钮，如果不指定type=button，那个默认是submit，执行后，会进行页面跳转-->
+				<button type="button" class="layui-btn" lay-submit="" lay-filter="demo2" style="position: relative;left: 300px;" id="commentformbutton">提交</button>
+			</div>
+		</form>
+	</div>
+
+</body>
+
+<style>
+	#filmpiaotable tr th{
+		/*border: 1px solid Gainsboro;*/
+		width: 150px;
+		height: 35px;
+		padding: 6px;
+		font-size: 18px;
+		background-color: WhiteSmoke;
+	}
+	#filmpiaotable tr td{
+		border: 1px solid Gainsboro;
+		width: 150px;
+		height: 35px;
+		padding: 6px;
+		text-align: center;
+	}
+	.comment{
+			margin-top:10px;
+		}
+		#commentdiv{
+			border: 1px solid gainsboro;
+			width: 65%;
+			/*height: 500px;*/
+			margin: auto;
+		}
+		#writecommentdiv,#demofenye{
+			/*border: 1px solid gainsboro;*/
+			width: 65%;
+			height: 10;
+			margin: auto;
+		}
+	    .comment_details {
+	    	float:left;
+	    }
+	    .comment_content {
+	    	margin-top:10px;
+	    	font-size:16px;
+	    	margin-left: 65px;
+	    }
+	    
+		.imgdiv{
+			float:left;
+	 		margin-left:10px;
+		}
+		.imgcss {
+			width:50px;
+			height:50px;
+			border-radius: 50%;
+		}
+		.comment_name { 
+			margin-left:10px;
+			color:#3D9EEA;
+			font-size:15px;
+			font-weight: bolder;
+		}
+</style>
+
+
+<!--实现分享的代码（百度上找到的）-->
+<script>
+	window._bd_share_config={
+		"common":{"bdSnsKey":{},//此处放置通用设置
+		"bdText":"",//分享的内容
+		"bdMini":"2",//下拉浮层中分享按钮的列数
+		"bdPic":"",//分享的图片
+		"bdStyle":"0",
+		"bdSize":"16"},//分享按钮的尺寸
+		"share":{},//此处放置分享按钮设置
+		"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],
+		"viewText":"分享到：","viewSize":"16"},
+		"selectShare":{"bdContainerClass":null,//此处放置划词分享设置
+		"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};
+		with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+
+</html>
